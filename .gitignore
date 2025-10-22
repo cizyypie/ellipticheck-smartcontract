@@ -1,0 +1,32 @@
+
+out/
+cache/
+broadcast/
+lib/
+gas-snapshot.txt
+
+# ======================
+# 🔐 Environment & Credentials
+# ======================
+.env
+.env.*
+!.env.example
+node_modules/
+__pycache__/
+*.pyc
+getPubKey.js
+# ======================
+# 🧩 IDE / System Files
+# ======================
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log
+
+# ======================
+# 🧪 Test artifacts
+# ======================
+*.json
+*.bin
+*.abi
