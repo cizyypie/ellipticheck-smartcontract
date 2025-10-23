@@ -18,12 +18,15 @@ contract TicketVerifier {
     TicketNFT public ticketNFT; // referensi kontrak TicketNFT
     mapping(bytes32 => bool) public usedDigest; // anti-replay
     address public immutable issuer; // penandatangan sah
+    mapping(address => uint256) public userNonce;
 
     // tambahkan koordinat publik key issuer (dihitung dari private key penanda tangan)
     // tambahkan koordinat publik key issuer (contoh dummy, ganti dengan yang sebenarnya)
-    uint256 constant Qx = 0x931e7fda8da226f799f791eefc9afebcd7ae2b1b19a03c5eaa8d72122d9fe74d;
-    uint256 constant Qy = 0x887a3962ff861190b531ab31ee82f0d7f255dfe3ab73ca627bd70ab3d1cbb417;
-    
+    uint256 constant Qx =
+        0x931e7fda8da226f799f791eefc9afebcd7ae2b1b19a03c5eaa8d72122d9fe74d;
+    uint256 constant Qy =
+        0x887a3962ff861190b531ab31ee82f0d7f255dfe3ab73ca627bd70ab3d1cbb417;
+
     // konteks internal sementara untuk markUsed
     bytes32 private _pendingDigest;
     address private _pendingOwner;
@@ -82,6 +85,10 @@ contract TicketVerifier {
         bytes32 metadataHash,
         bytes calldata signature
     ) external returns (bool) {
+        // ambil nonce pengguna dari kontrak
+        uint256 expectedNonce = userNonce[owner];
+        require(nonce == expectedNonce, "invalid nonce");
+
         // 1) expiry lebih dulu agar test `Expired()` lulus dan pesannya tepat
         if (block.timestamp > deadline) {
             emit TicketRejected(owner, ticketId, "expired");
@@ -140,7 +147,6 @@ contract TicketVerifier {
             revert("invalid sig");
         }
 
-
         // 5) anti-replay & penandaan used (private, tanpa expose digest)
         _pendingDigest = digest;
         _pendingOwner = owner;
@@ -149,6 +155,7 @@ contract TicketVerifier {
         delete _pendingOwner;
 
         emit TicketVerified(owner, ticketId, digest, block.timestamp);
+        userNonce[owner]++; // naikkan nonce agar tidak bisa diulang
         return true;
     }
 
@@ -175,5 +182,9 @@ contract TicketVerifier {
             s := mload(add(sig, 64))
             v := byte(0, mload(add(sig, 96)))
         }
+    }
+
+    function getNonce(address user) external view returns (uint256) {
+        return userNonce[user];
     }
 }

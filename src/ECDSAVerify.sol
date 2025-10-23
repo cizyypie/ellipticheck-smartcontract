@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-/// @title ECDSAVerify
-///         mengikuti FIPS 186-5 §6.4.2 dan Stallings (2023)
 library ECDSAVerify {
     uint256 constant a = 0;
     uint256 constant b = 7;
@@ -20,12 +18,8 @@ library ECDSAVerify {
         uint256 y;
     }
 
-    /// @notice Verifikasi tanda tangan ECDSA (tanpa ecrecover)
-    /// @param z hash pesan
-    /// @param r komponen r
-    /// @param s komponen s
-    /// @param Q public key signer
-    /// @return valid true jika tanda tangan valid (r == x_R mod n)
+    /// z hash pesan, r komponen r, s komponen s, Q public key signer
+    /// return valid true jika tanda tangan valid (r == x_R mod n)
     function ecdsaverify(
         uint256 z,
         uint256 r,
