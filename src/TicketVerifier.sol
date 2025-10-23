@@ -15,34 +15,40 @@ contract TicketVerifier {
         );
 
     // ============ State ============
-    TicketNFT public ticketNFT; // referensi kontrak TicketNFT
-    mapping(bytes32 => bool) public usedDigest; // anti-replay
-    address public immutable issuer; // penandatangan sah
-    mapping(address => uint256) public userNonce;
+    TicketNFT public ticketNFT; // referensi ke kontrak NFT tempat tiket disimpan, untuk memeriksa siapa pemilik tiket 
+    mapping(bytes32 => bool) public usedDigest; // menyimpan hash tanda tangan (digest) yang sudah pernah digunakan → agar tidak bisa di-replay.
+    address public immutable issuer; // alamat pembuat kontrak, yang menjadi penerbit tiket.
+    mapping(address => uint256) public userNonce; //penyimpanan angka unik untuk setiap user.
+                                                  // Ini inti mekanisme anti-replay versi on-chain.
+                                                  // Setiap pengguna punya nonce tersendiri, dimulai dari 0, dan akan bertambah setiap kali verifikasi berhasil.
 
     // tambahkan koordinat publik key issuer (dihitung dari private key penanda tangan)
-    // tambahkan koordinat publik key issuer (contoh dummy, ganti dengan yang sebenarnya)
+    // tambahkan koordinat publik key issuer 
     uint256 constant Qx =
         0x931e7fda8da226f799f791eefc9afebcd7ae2b1b19a03c5eaa8d72122d9fe74d;
     uint256 constant Qy =
         0x887a3962ff861190b531ab31ee82f0d7f255dfe3ab73ca627bd70ab3d1cbb417;
 
-    // konteks internal sementara untuk markUsed
+    // konteks internal sementara untuk markUsed → Variabel sementara untuk menyimpan digest dan owner sebelum diproses di fungsi _markUsed.
+    //Setelah selesai, nilainya dihapus lagi (delete).
     bytes32 private _pendingDigest;
     address private _pendingOwner;
 
     // ============ Events ============
-    event TicketVerified(
+    // tanda tiket berhasil diverifikasi.
+    event TicketVerified(   
         address indexed owner,
         uint256 indexed ticketId,
         bytes32 digest,
         uint256 timestamp
     );
+    // tiket ditolak (dengan alasan).
     event TicketRejected(
         address indexed owner,
         uint256 indexed ticketId,
         string reason
     );
+    // tiket resmi digunakan.
     event TicketUsed(
         uint256 indexed ticketId,
         address indexed owner,
@@ -55,6 +61,7 @@ contract TicketVerifier {
         // pastikan alamat adalah kontrak
         require(nftAddress.code.length > 0, "nft not a contract");
 
+        // Menyimpan issuer = msg.sender (pembuat kontrak).
         issuer = msg.sender;
         ticketNFT = TicketNFT(nftAddress);
 
@@ -73,7 +80,7 @@ contract TicketVerifier {
                 chainId,
                 address(this)
             )
-        );
+        ); 
     }
 
     // ============ Core ============
@@ -85,11 +92,14 @@ contract TicketVerifier {
         bytes32 metadataHash,
         bytes calldata signature
     ) external returns (bool) {
-        // ambil nonce pengguna dari kontrak
+        // Mengambil nilai nonce terakhir milik user dari kontrak.
         uint256 expectedNonce = userNonce[owner];
+        // Mengecek apakah nonce yang dikirim sama dengan yang tersimpan.
+        // Kalau beda → tanda tangan ditolak (bisa jadi replay).
         require(nonce == expectedNonce, "invalid nonce");
 
         // 1) expiry lebih dulu agar test `Expired()` lulus dan pesannya tepat
+        // Jika waktu sekarang melewati batas deadline, tiket dianggap kadaluarsa dan transaksi dibatalkan.
         if (block.timestamp > deadline) {
             emit TicketRejected(owner, ticketId, "expired");
             revert("expired");
@@ -117,6 +127,7 @@ contract TicketVerifier {
         );
 
         // 4) recover signer dengan validasi low-s (EIP-2) & v 27/28
+        // Memecah tanda tangan signature menjadi tiga komponen (r, s, v) agar bisa diproses di ECDSA.
         (bytes32 r, bytes32 s, uint8 v) = _splitSignature(signature);
         // secp256k1n/2 (nilai setengah kurva untuk low-s)
         // 0x7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a0
@@ -130,11 +141,12 @@ contract TicketVerifier {
         if (v != 27 && v != 28) {
             emit TicketRejected(owner, ticketId, "invalid v");
             revert("invalid v");
-        }
+        } //Memastikan nilai tanda tangan tidak manipulatif dan sesuai aturan low-s (EIP-2).
 
-        /// verifikasi ECDSA on-chain menggunakan ECDSAVerify
+        /// verifikasi ECDSA dengan public key issuer
+        // Mengecek apakah tanda tangan (r, s) cocok dengan pesan digest dan public key issuer.
+        // Jika tidak cocok → transaksi gagal.
         ECDSAVerify.ECPoint memory pubKey = ECDSAVerify.ECPoint(Qx, Qy);
-
         bool valid = ECDSAVerify.ecdsaverify(
             uint256(digest),
             uint256(r),
@@ -157,6 +169,13 @@ contract TicketVerifier {
         emit TicketVerified(owner, ticketId, digest, block.timestamp);
         userNonce[owner]++; // naikkan nonce agar tidak bisa diulang
         return true;
+        /*
+        1) _pendingDigest & _pendingOwner disiapkan sementara.
+        2) _markUsed() menandai bahwa digest ini sudah pernah digunakan.
+        3) Setelah itu dihapus (supaya variabel sementara bersih).
+        4) Emit event TicketVerified.
+        5) userNonce[owner]++ → meningkatkan nonce user agar tanda tangan yang sama tidak bisa dipakai ulang.  
+                */
     }
 
     // ============ Internal ============
@@ -164,14 +183,14 @@ contract TicketVerifier {
         bytes32 digest = _pendingDigest;
         address owner = _pendingOwner;
 
-        if (usedDigest[digest]) {
+        if (usedDigest[digest]) { //Jika digest sudah ada di mapping, berarti pesan itu pernah diverifikasi → replay attack
             emit TicketRejected(owner, ticketId, "replayed");
             revert("replayed");
         }
 
         usedDigest[digest] = true;
         emit TicketUsed(ticketId, owner, block.timestamp);
-    }
+    } 
 
     function _splitSignature(
         bytes memory sig
@@ -185,6 +204,6 @@ contract TicketVerifier {
     }
 
     function getNonce(address user) external view returns (uint256) {
-        return userNonce[user];
-    }
+        return userNonce[user]; 
+    }//Frontend bisa memanggil ini untuk mengetahui nonce terakhir milik user sebelum membuat tanda tangan baru.
 }
