@@ -1,21 +1,4 @@
-Kontrak (lebih tepatnya **library**) yang kamu kirim ini adalah bagian yang **melakukan verifikasi tanda tangan digital (ECDSA)** — tapi ditulis **manual** tanpa pakai `ecrecover`, jadi semua hitungan kurva eliptik dilakukan sendiri.
-
-## Aku jelaskan **dari nol dan tanpa rumus ribet**, biar kamu bisa benar-benar paham walau belum punya latar belakang kriptografi.
-
-## 🧩 Apa Tujuan Library Ini?
-
-Bayangkan kamu punya sistem tiket digital (NFT tiket) seperti yang tadi kita bahas.
-Setiap tiket waktu mau **dipakai untuk check-in**, harus dibuktikan bahwa:
-
-> “Tiket ini benar-benar ditandatangani oleh panitia resmi, bukan dibuat orang lain.”
-
-Nah, cara membuktikan itu adalah dengan **verifikasi tanda tangan digital** (digital signature verification).
-Library ini melakukan hal itu menggunakan algoritma **ECDSA (Elliptic Curve Digital Signature Algorithm)**, standar yang dipakai Bitcoin, Ethereum, dan sistem keamanan modern lainnya (sesuai standar **FIPS 186-5** dan dijelaskan di *Stallings, 2023, Chapter 13*).
-
----
-
-## 🧠 Analogi Sederhana
-
+Kontrak (lebih tepatnya **library**) yang kamu kirim ini 
 * **Panitia (issuer)** punya *private key* (kunci rahasia) dan *public key* (alamat publik).
 * Saat panitia membuat tiket, dia **menandatangani data tiket** dengan *private key*-nya → menghasilkan dua angka: **r** dan **s**.
 * Saat pengguna datang ke pintu masuk (check-in), sistem akan:
