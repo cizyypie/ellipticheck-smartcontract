@@ -18,7 +18,7 @@ function hexToBytes(hex: string): Uint8Array {
     bytes[i] = parseInt(h.substring(j, j + 2), 16);
     if (isNaN(bytes[i])) {
       throw new Error("Invalid hex string: contains non-hex characters.");
-    }
+    
   }
   return bytes;
 }
