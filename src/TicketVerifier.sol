@@ -4,10 +4,9 @@ pragma solidity ^0.8.24;
 import "../src/TicketNFT.sol";
 import "./ECDSAVerify.sol";
 
-/// @title TicketVerifier
-/// @notice Verifikasi ECDSA berbasis EIP-712 + kepemilikan NFT dengan anti-replay & expiry.
 contract TicketVerifier {
     // ============ EIP-712 ============
+    // digunakan agar tanda tangan terikat dengan domain/kontrak
     bytes32 public DOMAIN_SEPARATOR;
     bytes32 public constant TICKET_ACCESS_TYPEHASH =
         keccak256(
@@ -84,14 +83,8 @@ contract TicketVerifier {
     }
 
     // ============ Core ============
-    function verifyAccess(
-        uint256 ticketId,
-        address owner,
-        uint256 nonce,
-        uint256 deadline,
-        bytes32 metadataHash,
-        bytes calldata signature
-    ) external returns (bool) {
+    function verifyAccess(uint256 ticketId, address owner, uint256 nonce, uint256 deadline,
+        bytes32 metadataHash, bytes calldata signature ) external returns (bool) {
         // Mengambil nilai nonce terakhir milik user dari kontrak.
         uint256 expectedNonce = userNonce[owner];
         // Mengecek apakah nonce yang dikirim sama dengan yang tersimpan.
@@ -104,7 +97,6 @@ contract TicketVerifier {
             emit TicketRejected(owner, ticketId, "expired");
             revert("expired");
         }
-
         // 2) verifikasi kepemilikan NFT (hindari call ke non-contract lebih awal)
         if (ticketNFT.ownerOf(ticketId) != owner) {
             emit TicketRejected(owner, ticketId, "not owner");
@@ -113,8 +105,7 @@ contract TicketVerifier {
 
         // 3) hitung digest EIP-712
         bytes32 structHash = keccak256(
-            abi.encode(
-                TICKET_ACCESS_TYPEHASH,
+            abi.encode( TICKET_ACCESS_TYPEHASH,
                 ticketId,
                 owner,
                 nonce,
