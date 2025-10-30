@@ -69,18 +69,23 @@ library ECDSAVerify {
         }
     }
 
-    function modInverse(uint256 a_, uint256 m) internal pure returns (uint256) {
-        if (a_ == 0 || a_ == m || m == 0) return 0;
-        int256 t1;
-        int256 t2 = 1;
-        uint256 r1 = m;
-        uint256 r2 = a_;
-        while (r2 != 0) {
-            uint256 q = r1 / r2;
-            (r1, r2) = (r2, r1 - q * r2);
-            (t1, t2) = (t2, t1 - int256(q) * t2);
-        }
-        if (t1 < 0) t1 += int256(m);
-        return uint256(t1);
+    function modInverse(uint256 a, uint256 m) internal pure returns (uint256) {
+    if (a == 0 || m == 0) return 0;
+    int256 t = 0;
+    int256 newT = 1;
+    int256 r = int256(m);
+    int256 newR = int256(a);
+
+    while (newR != 0) {
+        uint256 q = uint256(r / newR);
+        (t, newT) = (newT, t - int256(q) * newT);
+        (r, newR) = (newR, r - int256(q) * newR);
     }
+
+    if (r > 1) revert("not invertible");
+    if (t < 0) t += int256(m);
+    return uint256(t) % m;
+}
+
+
 }
