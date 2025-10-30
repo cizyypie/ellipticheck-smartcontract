@@ -9,10 +9,10 @@ contract Deploy is Script {
     function run() external {
         vm.startBroadcast();
 
-        // 1️⃣ Deploy TicketNFT
+        // 1️ Deploy TicketNFT
         TicketNFT nft = new TicketNFT("ElliptiCheck", "ELT");
 
-        // 2️⃣ Deploy TicketVerifier, passing address NFT ke constructor
+        // 2️ Deploy TicketVerifier, passing address NFT ke constructor
         TicketVerifier verifier = new TicketVerifier("ElliptiCheck", "1", address(nft));
 
         console.log("TicketNFT deployed at:", address(nft));

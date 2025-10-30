@@ -28,7 +28,7 @@ library ECDSAVerify {
 
         uint256 sInv = modInverse(s, n); //menghitung invrs dari s, langkah awal verifikasi ecdsa
         uint256 u1 = mulmod(z, sInv, n); //u1 u2 Kombinasi linier faktor verifikasi, menggabungkan pesan n tanda tangan  
-        uint256 u2 = mulmod(r, sInv, n); //u1 = z·s⁻¹ mod n   | u2 = r·s⁻¹ mod n
+        uint256 u2 = mulmod(r, sInv, n); //u1 = z·s⁻¹ mod n | u2 = r·s⁻¹ mod n
 
         ECPoint memory R = ecAdd(ecMul(u1, ECPoint(Gx, Gy)), ecMul(u2, Q)); //Menghitung titik hasil di kurva (R')
                                                              //Melakukan perhitungan geometrik ECDSA

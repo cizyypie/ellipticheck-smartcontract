@@ -14,7 +14,7 @@ Kalau hasilnya *benar*, artinya tiket memang resmi dari panitia.
 
 ## 🔍 Bagian-Bagian Library
 
-### 1️⃣ Konstanta Kurva (Bagian atas)
+### 1️. Konstanta Kurva (Bagian atas)
 
 ```solidity
 uint256 constant a = 0;
@@ -39,7 +39,7 @@ Kamu bisa anggap ini seperti “aturan main” kurva:
 
 ---
 
-### 2️⃣ Struktur Titik
+### 2️. Struktur Titik
 
 ```solidity
 struct ECPoint {
@@ -52,13 +52,13 @@ Satu titik di kurva eliptik direpresentasikan dengan dua koordinat: `x` dan `y`.
 
 ---
 
-### 3️⃣ Fungsi Utama: `ecdsaverify`
+### 3️. Fungsi Utama: `ecdsaverify`
 
 ```solidity
 function ecdsaverify(uint256 z, uint256 r, uint256 s, ECPoint memory Q)
 ```
 
-Inilah **jantung utama** library.
+Inilah **tnti** library.
 Fungsinya memeriksa apakah tanda tangan (r, s) **cocok** dengan pesan yang di-hash (`z`) dan public key si penandatangan (`Q`).
 
 Langkah sederhananya begini:
