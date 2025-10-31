@@ -24,9 +24,9 @@ contract TicketVerifier {
     // tambahkan koordinat publik key issuer (dihitung dari private key penanda tangan)
     // tambahkan koordinat publik key issuer 
     uint256 constant Qx =
-        0x931e7fda8da226f799f791eefc9afebcd7ae2b1b19a03c5eaa8d72122d9fe74d;
+        0x8318535b54105d4a7aae60c08fc45f9687181b4fdfc625bd1a753fa7397fed75;
     uint256 constant Qy =
-        0x887a3962ff861190b531ab31ee82f0d7f255dfe3ab73ca627bd70ab3d1cbb417;
+        0x3547f11ca8696646f2f3acb08e31016afac23e630c5d11f59f61fef57b0d2aa5;
 
     // konteks internal sementara untuk markUsed → Variabel sementara untuk menyimpan digest dan owner sebelum diproses di fungsi _markUsed.
     //Setelah selesai, nilainya dihapus lagi (delete).

@@ -49,8 +49,8 @@ contract TicketVerifierTest is Test {
     // Catatan PENTING:
     // TicketVerifier TIDAK pakai ecrecover(issuer), tapi memverifikasi SIG dengan public key (Qx,Qy) yang DIHARDCODE.
     // Jadi, supaya test "valid signature" lulus, 'issuerPk' HARUS merupakan private key yang public key-nya cocok
-    // dengan Qx,Qy dalam TicketVerifier. Jika kamu tidak punya private key-nya, ganti Qx,Qy di kontrak dengan
-    // public key dari 'issuerPk' yang kamu pilih.
+    // dengan Qx,Qy dalam TicketVerifier.
+    
 
     function setUp() public {
         // akun pembeli (random untuk test)
