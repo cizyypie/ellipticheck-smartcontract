@@ -8,9 +8,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 /// @notice Kontrak NFT untuk tiket event dengan metadata terstruktur
 /// @dev Menggunakan ERC-721 standard dengan metadata on-chain
 contract TicketNFT is ERC721, Ownable {
-    // ============================================================
-    // 📊 STRUKTUR DATA
-    // ============================================================
+    //STRUKTUR DATA
     struct TicketMetadata {
         string eventName;       // Nama event
         string eventDate;       // Tanggal event
@@ -27,9 +25,7 @@ contract TicketNFT is ERC721, Ownable {
         bool isUsed;            // Status sudah digunakan/belum
     }
 
-    // ============================================================
-    // 🗃️ STATE VARIABLES
-    // ============================================================
+    //STATE VARIABLES
     uint256 private _tokenIdCounter;
     uint256 private _eventIdCounter;
 
@@ -38,9 +34,7 @@ contract TicketNFT is ERC721, Ownable {
     mapping(uint256 => uint256) public eventTicketCount;        // eventId => jumlah tiket terjual
     mapping(uint256 => string) private _tokenURIs;              // tokenId => URI metadata
 
-    // ============================================================
-    // 📢 EVENTS
-    // ============================================================
+    //EVENTS
     event EventCreated(
         uint256 indexed eventId,
         string eventName,
@@ -61,26 +55,20 @@ contract TicketNFT is ERC721, Ownable {
         uint256 timestamp
     );
 
-    // ============================================================
     // ⚠️ CUSTOM ERRORS
-    // ============================================================
     error EventNotActive();
     error SoldOut();
     error InsufficientPayment();
     error TicketAlreadyUsed();
     error InvalidEventId();
 
-    // ============================================================
-    // 🏗️ CONSTRUCTOR
-    // ============================================================
+    //CONSTRUCTOR
     constructor() ERC721("EventTicket", "ETIX") Ownable(msg.sender) {
         _tokenIdCounter = 1;
         _eventIdCounter = 1;
     }
 
-    // ============================================================
-    // 🎪 FASE 1: ORGANIZER CREATE EVENT & MINTING TICKETS
-    // ============================================================
+    //FASE 1: ORGANIZER CREATE EVENT & MINTING TICKETS
     
     /// @notice Organizer membuat event baru
     /// @param eventName Nama event
@@ -137,9 +125,7 @@ contract TicketNFT is ERC721, Ownable {
         emit TicketMinted(tokenId, eventId, to, ticketNumber);
     }
 
-    // ============================================================
-    // 🎫 FUNGSI HELPER & GETTER
-    // ============================================================
+    //FUNGSI HELPER & GETTER
 
     /// @notice Tandai tiket sudah digunakan (dipanggil oleh TicketVerifier)
     /// @param tokenId ID tiket yang digunakan

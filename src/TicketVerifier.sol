@@ -10,9 +10,7 @@ import "./ECDSAVerify.sol";
 contract TicketVerifier {
     using ECDSAVerify for uint256;
 
-    // =============================================================
-    // 📦 STRUCTS
-    // =============================================================
+    //  STRUCTS
     struct VerificationRequest {
         uint256 ticketId;
         address owner;
@@ -28,33 +26,25 @@ contract TicketVerifier {
         uint256 Qy;
     }
 
-    // =============================================================
-    // 🧠 KONSTANTA EIP-712
-    // =============================================================
+    // KONSTANTA EIP-712
     bytes32 public DOMAIN_SEPARATOR;
     bytes32 public constant TICKET_ACCESS_TYPEHASH = keccak256(
         "TicketAccess(uint256 ticketId,address owner,uint256 nonce,uint256 deadline,bytes32 metadataHash)"
     );
 
-    // =============================================================
-    // 🧩 STATE
-    // =============================================================
+    // STATE
     TicketNFT public ticketNFT;                     // referensi kontrak tiket
     mapping(bytes32 => bool) public usedDigest;     // anti replay
     mapping(address => uint256) public nonces;      // pelacakan nonce per user
 
-    // =============================================================
-    // ⚠️ CUSTOM ERRORS
-    // =============================================================
+    //CUSTOM ERRORS
     error Expired();
     error Replayed();
     error InvalidSignature();
     error NotOwner();
     error InvalidPublicKey();
 
-    // =============================================================
-    // 📋 EVENTS
-    // =============================================================
+    //EVENTS
     event TicketVerified(
         address indexed owner, 
         uint256 indexed ticketId, 
@@ -67,9 +57,7 @@ contract TicketVerifier {
         string reason
     );
 
-    // =============================================================
-    // 🗃️ KONSTRUKTOR
-    // =============================================================
+    // KONSTRUKTOR
     constructor(address _ticketNFT) {
         ticketNFT = TicketNFT(_ticketNFT);
 
@@ -89,16 +77,12 @@ contract TicketVerifier {
         );
     }
 
-    // =============================================================
-    // 📊 GETTER NONCE
-    // =============================================================
+    // GETTER NONCE
     function getNonce(address owner) external view returns (uint256) {
         return nonces[owner];
     }
 
-    // =============================================================
-    // 🎫 FUNGSI VERIFIKASI TIKET (MENGGUNAKAN ECDSA MANUAL)
-    // =============================================================
+    // FUNGSI VERIFIKASI TIKET (MENGGUNAKAN ECDSA MANUAL)
     /// @notice Verifikasi akses tiket dengan implementasi ECDSA manual
     function verifyAccess(
         VerificationRequest calldata request,
@@ -122,9 +106,7 @@ contract TicketVerifier {
         return true;
     }
 
-    // =============================================================
-    // 🔒 INTERNAL FUNCTIONS
-    // =============================================================
+    //INTERNAL FUNCTIONS
     
     function _validateRequest(VerificationRequest calldata request) private {
         // 1️⃣ Cek masa berlaku
@@ -200,16 +182,12 @@ contract TicketVerifier {
         }
     }
 
-    // =============================================================
     // 🔧 FUNGSI HELPER: Cek apakah digest sudah pernah digunakan
-    // =============================================================
     function isDigestUsed(bytes32 digest) external view returns (bool) {
         return usedDigest[digest];
     }
 
-    // =============================================================
     // 🔄 BACKWARD COMPATIBILITY: Original function signature
-    // =============================================================
     /// @notice Wrapper untuk backward compatibility
     function verifyAccess(
         uint256 ticketId,

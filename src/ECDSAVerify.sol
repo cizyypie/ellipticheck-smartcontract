@@ -5,9 +5,7 @@ pragma solidity ^0.8.24;
 /// @notice Implementasi manual algoritma ECDSA (secp256k1) untuk verifikasi tanda tangan digital
 /// @dev Library untuk verifikasi signature dengan curve secp256k1
 library ECDSAVerify {
-    // ============================================================
-    // 🔢 KONSTANTA KURVA ELIPTIK SECP256K1
-    // ============================================================
+    //KONSTANTA KURVA ELIPTIK SECP256K1
     uint256 constant a = 0;
     uint256 constant b = 7;
     uint256 constant p = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F;
@@ -20,9 +18,7 @@ library ECDSAVerify {
         uint256 y;
     }
 
-    // ============================================================
-    // ⚙️ FUNGSI UTAMA VERIFIKASI ECDSA
-    // ============================================================
+    //FUNGSI UTAMA VERIFIKASI ECDSA
     /// @notice Verifikasi signature ECDSA secara matematis
     /// @param z Hash pesan (digest dalam bentuk uint256)
     /// @param r Komponen r dari signature
@@ -55,9 +51,7 @@ library ECDSAVerify {
         return (addmod(R.x, 0, n) == r);
     }
 
-    // ============================================================
-    // 🔐 KONVERSI PUBLIC KEY KE ADDRESS
-    // ============================================================
+    //KONVERSI PUBLIC KEY KE ADDRESS
     /// @notice Konversi public key (x,y) ke address Ethereum
     /// @dev Address = last 20 bytes of keccak256(x || y)
     /// @param Q Public key dalam bentuk ECPoint
@@ -67,9 +61,7 @@ library ECDSAVerify {
         addr = address(uint160(uint256(hash)));
     }
 
-    // ============================================================
-    // ✅ VALIDASI TITIK DI KURVA
-    // ============================================================
+    // VALIDASI TITIK DI KURVA
     /// @notice Cek apakah titik Q berada di kurva y² = x³ + 7 (mod p)
     function isOnCurve(ECPoint memory Q) internal pure returns (bool) {
         if (Q.x == 0 && Q.y == 0) return false;
@@ -80,9 +72,7 @@ library ECDSAVerify {
         return lhs == rhs;
     }
 
-    // ============================================================
-    // ➕ PENJUMLAHAN TITIK DI KURVA ELIPTIK
-    // ============================================================
+    //PENJUMLAHAN TITIK DI KURVA ELIPTIK
     function ecAdd(
         ECPoint memory P,
         ECPoint memory Q
@@ -116,9 +106,7 @@ library ECDSAVerify {
         R = ECPoint(xr, yr);
     }
 
-    // ============================================================
-    // ✖️ PERKALIAN SKALAR (DOUBLE-AND-ADD)
-    // ============================================================
+    // PERKALIAN SKALAR (DOUBLE-AND-ADD)
     function ecMul(
         uint256 k,
         ECPoint memory P
@@ -136,18 +124,14 @@ library ECDSAVerify {
         }
     }
 
-    // ============================================================
-    // 🔢 MODULAR INVERSE (FERMAT'S LITTLE THEOREM)
-    // ============================================================
+    //MODULAR INVERSE (FERMAT'S LITTLE THEOREM)
     function modInverse(uint256 k, uint256 m) internal pure returns (uint256) {
         require(m != 0, "modInverse: MODULUS_IS_ZERO");
         require(k % m != 0, "modInverse: NOT_INVERTIBLE");
         return modExp(k, m - 2, m);
     }
 
-    // ============================================================
-    // ♻️ MODULAR EXPONENTIATION
-    // ============================================================
+    //MODULAR EXPONENTIATION
     function modExp(
         uint256 base,
         uint256 e,
