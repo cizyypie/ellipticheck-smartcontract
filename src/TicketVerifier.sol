@@ -4,17 +4,12 @@ pragma solidity ^0.8.24;
 import "./TicketNFT.sol";
 import "./ECDSAVerify.sol";
 
-/// @title TicketVerifier
-/// @notice Verifikasi tiket NFT menggunakan implementasi manual ECDSA + EIP-712
-///         Dilengkapi proteksi nonce, expiry, dan anti-replay.
 contract TicketVerifier {
     using ECDSAVerify for uint256;
 
-    //  STRUCTS
     struct VerificationRequest {
         uint256 ticketId;
         address owner;
-        uint256 nonce;
         uint256 deadline;
         bytes32 metadataHash;
     }
@@ -26,38 +21,26 @@ contract TicketVerifier {
         uint256 Qy;
     }
 
-    // KONSTANTA EIP-712
+    TicketNFT public ticketNFT;
+
     bytes32 public DOMAIN_SEPARATOR;
-    bytes32 public constant TICKET_ACCESS_TYPEHASH = keccak256(
-        "TicketAccess(uint256 ticketId,address owner,uint256 nonce,uint256 deadline,bytes32 metadataHash)"
-    );
+    bytes32 public constant TYPEHASH =
+        keccak256(
+            "TicketAccess(uint256 ticketId,address owner,uint256 deadline,bytes32 metadataHash)"
+        );
 
-    // STATE
-    TicketNFT public ticketNFT;                     // referensi kontrak tiket
-    mapping(bytes32 => bool) public usedDigest;     // anti replay
-    mapping(address => uint256) public nonces;      // pelacakan nonce per user
+    mapping(bytes32 => bool) public usedDigest;
 
-    //CUSTOM ERRORS
+    // ERRORS
     error Expired();
     error Replayed();
     error InvalidSignature();
     error NotOwner();
     error InvalidPublicKey();
 
-    //EVENTS
-    event TicketVerified(
-        address indexed owner, 
-        uint256 indexed ticketId, 
-        bytes32 digest, 
-        uint256 timestamp
-    );
-    event TicketRejected(
-        address indexed owner, 
-        uint256 indexed ticketId, 
-        string reason
-    );
+    event TicketVerified(address indexed owner, uint256 ticketId, bytes32 digest);
+    event TicketRejected(uint256 ticketId, string reason);
 
-    // KONSTRUKTOR
     constructor(address _ticketNFT) {
         ticketNFT = TicketNFT(_ticketNFT);
 
@@ -68,141 +51,82 @@ contract TicketVerifier {
 
         DOMAIN_SEPARATOR = keccak256(
             abi.encode(
-                keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-                keccak256(bytes("TicketVerifier")),
-                keccak256(bytes("1")),
+                keccak256(
+                    "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+                ),
+                keccak256("TicketVerifier"),
+                keccak256("1"),
                 chainId,
                 address(this)
             )
         );
     }
 
-    // GETTER NONCE
-    function getNonce(address owner) external view returns (uint256) {
-        return nonces[owner];
-    }
-
-    // FUNGSI VERIFIKASI TIKET (MENGGUNAKAN ECDSA MANUAL)
-    /// @notice Verifikasi akses tiket dengan implementasi ECDSA manual
+    // ───────────────────────────
+    // MAIN VERIFY FUNCTION
+    // ───────────────────────────
     function verifyAccess(
-        VerificationRequest calldata request,
-        SignatureData calldata signature
+        VerificationRequest calldata req,
+        SignatureData calldata sig
     ) external returns (bool) {
-        // ====== FASE 1: VALIDASI AWAL ======
-        _validateRequest(request);
+        // 1. request validation
+        if (block.timestamp > req.deadline) revert Expired();
+        if (ticketNFT.ownerOf(req.ticketId) != req.owner) revert NotOwner();
 
-        // ====== FASE 2: HITUNG EIP-712 DIGEST ======
-        bytes32 digest = _computeDigest(request);
+        // 2. digest
+        bytes32 digest = _buildDigest(req);
+        if (usedDigest[digest]) revert Replayed();
 
-        // ====== FASE 3: VERIFIKASI ECDSA MANUAL ======
-        _verifySignature(request.owner, request.ticketId, digest, signature);
+        // 3. signature verification
+        _verifySignature(req.owner, digest, sig);
 
-        // ====== FASE 4: FINALISASI ======
+        // 4. mark digest used
         usedDigest[digest] = true;
-        nonces[request.owner]++;
 
-        emit TicketVerified(request.owner, request.ticketId, digest, block.timestamp);
-        
+        // 5. mark ticket used
+        ticketNFT.markTicketAsUsed(req.ticketId);
+
+        emit TicketVerified(req.owner, req.ticketId, digest);
         return true;
     }
 
-    //INTERNAL FUNCTIONS
-    
-    function _validateRequest(VerificationRequest calldata request) private {
-        // 1️⃣ Cek masa berlaku
-        if (block.timestamp > request.deadline) {
-            emit TicketRejected(request.owner, request.ticketId, "expired");
-            revert Expired();
-        }
-
-        // 2️⃣ Pastikan tiket benar-benar milik owner
-        if (ticketNFT.ownerOf(request.ticketId) != request.owner) {
-            emit TicketRejected(request.owner, request.ticketId, "not owner");
-            revert NotOwner();
-        }
-
-        // 3️⃣ Cek nonce agar tidak terjadi replay
-        if (request.nonce != nonces[request.owner]) {
-            emit TicketRejected(request.owner, request.ticketId, "invalid nonce");
-            revert Replayed();
-        }
-    }
-
-    function _computeDigest(VerificationRequest calldata request) private returns (bytes32) {
+    // ───────────────────────────
+    // INTERNAL HELPERS
+    // ───────────────────────────
+    function _buildDigest(VerificationRequest calldata req)
+        internal
+        view
+        returns (bytes32)
+    {
         bytes32 structHash = keccak256(
             abi.encode(
-                TICKET_ACCESS_TYPEHASH,
-                request.ticketId,
-                request.owner,
-                request.nonce,
-                request.deadline,
-                request.metadataHash
+                TYPEHASH,
+                req.ticketId,
+                req.owner,
+                req.deadline,
+                req.metadataHash
             )
         );
 
-        bytes32 digest = keccak256(
-            abi.encodePacked(
-                "\x19\x01",
-                DOMAIN_SEPARATOR,
-                structHash
-            )
+        return keccak256(
+            abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR, structHash)
         );
-
-        // Cek apakah digest sudah pernah dipakai (anti replay)
-        if (usedDigest[digest]) {
-            emit TicketRejected(request.owner, request.ticketId, "digest already used");
-            revert Replayed();
-        }
-
-        return digest;
     }
 
     function _verifySignature(
         address owner,
-        uint256 ticketId,
         bytes32 digest,
-        SignatureData calldata signature
-    ) private {
-        // Bentuk public key dari koordinat yang dikirim
-        ECDSAVerify.ECPoint memory Q = ECDSAVerify.ECPoint(signature.Qx, signature.Qy);
-
-        // Validasi bahwa public key benar-benar milik owner
-        if (ECDSAVerify.publicKeyToAddress(Q) != owner) {
-            emit TicketRejected(owner, ticketId, "invalid public key");
-            revert InvalidPublicKey();
-        }
-
-        // Konversi digest ke uint256 untuk ECDSA verify
-        uint256 z = uint256(digest);
-
-        // VERIFIKASI SIGNATURE DENGAN ALGORITMA ECDSA MANUAL
-        if (!ECDSAVerify.ecdsaverify(z, signature.r, signature.s, Q)) {
-            emit TicketRejected(owner, ticketId, "invalid signature");
-            revert InvalidSignature();
-        }
-    }
-
-    // 🔧 FUNGSI HELPER: Cek apakah digest sudah pernah digunakan
-    function isDigestUsed(bytes32 digest) external view returns (bool) {
-        return usedDigest[digest];
-    }
-
-    // 🔄 BACKWARD COMPATIBILITY: Original function signature
-    /// @notice Wrapper untuk backward compatibility
-    function verifyAccess(
-        uint256 ticketId,
-        address owner,
-        uint256 nonce,
-        uint256 deadline,
-        bytes32 metadataHash,
-        uint256 r,
-        uint256 s,
-        uint256 Qx,
-        uint256 Qy
-    ) external returns (bool) {
-        return this.verifyAccess(
-            VerificationRequest(ticketId, owner, nonce, deadline, metadataHash),
-            SignatureData(r, s, Qx, Qy)
+        SignatureData calldata sig
+    ) internal view {
+        ECDSAVerify.ECPoint memory Q = ECDSAVerify.ECPoint(
+            sig.Qx,
+            sig.Qy
         );
+
+        if (ECDSAVerify.publicKeyToAddress(Q) != owner)
+            revert InvalidPublicKey();
+
+        if (!ECDSAVerify.ecdsaverify(uint256(digest), sig.r, sig.s, Q))
+            revert InvalidSignature();
     }
 }
