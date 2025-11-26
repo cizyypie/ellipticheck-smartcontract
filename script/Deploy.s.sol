@@ -27,8 +27,8 @@ contract DeployScript is Script {
         // 3. Setup event example (optional)
         console.log("\n=== Creating Sample Event ===");
         uint256 eventId = ticketNFT.createEvent(
-            "Konser Musik Rock 2024",
-            "2024-12-31",
+            "Konser Musik Rock 2025",
+            "2025-12-31",
             "Jakarta Convention Center",
             0.1 ether, // 0.1 ETH per ticket
             100 // 100 tickets available

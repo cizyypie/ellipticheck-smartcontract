@@ -3,11 +3,13 @@ pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts/utils/Base64.sol";
 
 contract TicketNFT is ERC721, Ownable {
+    using Strings for uint256;
     
     // STRUCTS
-
     struct TicketMetadata {
         string eventName;
         string eventDate;
@@ -31,9 +33,8 @@ contract TicketNFT is ERC721, Ownable {
     mapping(uint256 => TicketMetadata) public events;
     mapping(uint256 => Ticket) public tickets;
     mapping(uint256 => uint256) public eventTicketCount;
-    mapping(uint256 => string) private _tokenURIs;
 
-    address public verifier; // TicketVerifier contract
+    address public verifier;
 
     // EVENTS
     event EventCreated(
@@ -130,14 +131,7 @@ contract TicketNFT is ERC721, Ownable {
         emit TicketUsed(tokenId, ownerOf(tokenId), block.timestamp);
     }
 
-    // TOKEN URI
-    function setTokenURI(uint256 tokenId, string calldata uri)
-        external
-        onlyOwner
-    {
-        _tokenURIs[tokenId] = uri;
-    }
-
+    // ✅ SIMPLIFIED TOKEN URI - MINIMAL METADATA TO AVOID STACK ISSUES
     function tokenURI(uint256 tokenId)
         public
         view
@@ -145,11 +139,32 @@ contract TicketNFT is ERC721, Ownable {
         returns (string memory)
     {
         _requireOwned(tokenId);
-        return _tokenURIs[tokenId];
+        
+        Ticket memory ticket = tickets[tokenId];
+        TicketMetadata memory eventData = events[ticket.eventId];
+
+        // Simplified JSON - just name and basic info
+        bytes memory json = abi.encodePacked(
+            '{"name":"',
+            eventData.eventName,
+            ' #',
+            ticket.ticketNumber.toString(),
+            '","description":"Ticket ',
+            ticket.ticketNumber.toString(),
+            ' for ',
+            eventData.eventName,
+            '"}'
+        );
+
+        return string(
+            abi.encodePacked(
+                "data:application/json;base64,",
+                Base64.encode(json)
+            )
+        );
     }
 
-
-    // MISC  
+    // MISC
     function toggleEventStatus(uint256 eventId) external onlyOwner {
         events[eventId].isActive = !events[eventId].isActive;
     }
@@ -157,5 +172,68 @@ contract TicketNFT is ERC721, Ownable {
     function withdraw() external onlyOwner {
         (bool ok, ) = payable(owner()).call{value: address(this).balance}("");
         require(ok, "withdraw failed");
+    }
+
+    // GETTER FUNCTIONS
+    function eventCounter() external view returns (uint256) {
+        return _eventIdCounter - 1;
+    }
+
+    function getEvent(uint256 eventId) 
+        external 
+        view 
+        returns (TicketMetadata memory) 
+    {
+        if (eventId == 0 || eventId >= _eventIdCounter) revert InvalidEventId();
+        return events[eventId];
+    }
+
+    function getTicket(uint256 tokenId) 
+        external 
+        view 
+        returns (Ticket memory) 
+    {
+        _requireOwned(tokenId);
+        return tickets[tokenId];
+    }
+
+    function getAllEvents() external view returns (TicketMetadata[] memory) {
+        uint256 totalEvents = _eventIdCounter - 1;
+        TicketMetadata[] memory allEvents = new TicketMetadata[](totalEvents);
+        
+        for (uint256 i = 1; i <= totalEvents; i++) {
+            allEvents[i - 1] = events[i];
+        }
+        
+        return allEvents;
+    }
+
+    function tokenCounter() external view returns (uint256) {
+        return _tokenIdCounter - 1;
+    }
+
+    // ✅ BONUS: Get full ticket info for frontend display
+    function getTicketInfo(uint256 tokenId) 
+        external 
+        view 
+        returns (
+            string memory eventName,
+            string memory eventDate,
+            string memory eventLocation,
+            uint256 ticketNumber,
+            bool isUsed
+        ) 
+    {
+        _requireOwned(tokenId);
+        Ticket memory ticket = tickets[tokenId];
+        TicketMetadata memory eventData = events[ticket.eventId];
+        
+        return (
+            eventData.eventName,
+            eventData.eventDate,
+            eventData.eventLocation,
+            ticket.ticketNumber,
+            ticket.isUsed
+        );
     }
 }

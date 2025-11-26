@@ -114,19 +114,20 @@ contract TicketVerifier {
     }
 
     function _verifySignature(
-        address owner,
-        bytes32 digest,
-        SignatureData calldata sig
-    ) internal view {
-        ECDSAVerify.ECPoint memory Q = ECDSAVerify.ECPoint(
-            sig.Qx,
-            sig.Qy
-        );
+    address owner,
+    bytes32 digest,
+    SignatureData calldata sig
+) internal pure {
+    ECDSAVerify.ECPoint memory Q = ECDSAVerify.ECPoint(
+        sig.Qx,
+        sig.Qy
+    );
 
-        if (ECDSAVerify.publicKeyToAddress(Q) != owner)
-            revert InvalidPublicKey();
+    if (ECDSAVerify.publicKeyToAddress(Q) != owner)
+        revert InvalidPublicKey();
 
-        if (!ECDSAVerify.ecdsaverify(uint256(digest), sig.r, sig.s, Q))
-            revert InvalidSignature();
-    }
+    if (!ECDSAVerify.ecdsaverify(uint256(digest), sig.r, sig.s, Q))
+        revert InvalidSignature();
+}
+
 }
