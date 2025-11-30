@@ -66,12 +66,13 @@ contract TicketNFT is ERC721, Ownable {
     error Unauthorized();
 
     // CONSTRUCTOR
-    constructor() ERC721("EventTicket", "ETIX") Ownable(msg.sender) {}
+    constructor() ERC721("ElliptiCheck", "ELC") Ownable(msg.sender) {}
 
     // SET VERIFIER
     function setVerifier(address _verifier) external onlyOwner {
         verifier = _verifier;
     }
+
 
     // EVENT CREATION
     function createEvent(
@@ -131,7 +132,7 @@ contract TicketNFT is ERC721, Ownable {
         emit TicketUsed(tokenId, ownerOf(tokenId), block.timestamp);
     }
 
-    // ✅ SIMPLIFIED TOKEN URI - MINIMAL METADATA TO AVOID STACK ISSUES
+    // SIMPLIFIED TOKEN URI - MINIMAL METADATA TO AVOID STACK ISSUES
     function tokenURI(uint256 tokenId)
         public
         view
@@ -143,23 +144,107 @@ contract TicketNFT is ERC721, Ownable {
         Ticket memory ticket = tickets[tokenId];
         TicketMetadata memory eventData = events[ticket.eventId];
 
-        // Simplified JSON - just name and basic info
-        bytes memory json = abi.encodePacked(
-            '{"name":"',
-            eventData.eventName,
-            ' #',
-            ticket.ticketNumber.toString(),
-            '","description":"Ticket ',
-            ticket.ticketNumber.toString(),
-            ' for ',
-            eventData.eventName,
-            '"}'
+        // Generate SVG image
+        string memory svg = _generateSVG(tokenId, ticket, eventData);
+        
+        // Encode SVG to base64
+        string memory svgBase64 = Base64.encode(bytes(svg));
+
+        // Build complete JSON metadata
+        string memory json = string(
+            abi.encodePacked(
+                '{"name":"',
+                eventData.eventName,
+                ' - Ticket #',
+                ticket.ticketNumber.toString(),
+                '","description":"Event ticket for ',
+                eventData.eventName,
+                ' on ',
+                eventData.eventDate,
+                '","image":"data:image/svg+xml;base64,',
+                svgBase64,
+                '","attributes":[',
+                '{"trait_type":"Event","value":"',
+                eventData.eventName,
+                '"},',
+                '{"trait_type":"Date","value":"',
+                eventData.eventDate,
+                '"},',
+                '{"trait_type":"Location","value":"',
+                eventData.eventLocation,
+                '"},',
+                '{"trait_type":"Ticket Number","value":"',
+                ticket.ticketNumber.toString(),
+                '"},',
+                '{"trait_type":"Status","value":"',
+                ticket.isUsed ? 'Used' : 'Active',
+                '"}',
+                ']}'
+            )
         );
 
         return string(
             abi.encodePacked(
                 "data:application/json;base64,",
-                Base64.encode(json)
+                Base64.encode(bytes(json))
+            )
+        );
+    }
+
+    // Generate beautiful SVG ticket image
+    function _generateSVG(
+        uint256 tokenId,
+        Ticket memory ticket,
+        TicketMetadata memory eventData
+    ) internal pure returns (string memory) {
+        return string(
+            abi.encodePacked(
+                '<svg width="400" height="600" xmlns="http://www.w3.org/2000/svg">',
+                '<defs>',
+                '<linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">',
+                '<stop offset="0%" style="stop-color:rgb(147,51,234);stop-opacity:1" />',
+                '<stop offset="100%" style="stop-color:rgb(79,70,229);stop-opacity:1" />',
+                '</linearGradient>',
+                '</defs>',
+                '<rect width="400" height="600" fill="url(#grad)" rx="20"/>',
+                '<rect x="20" y="20" width="360" height="560" fill="white" rx="15" opacity="0.95"/>',
+                '<text x="200" y="80" font-family="Arial" font-size="28" font-weight="bold" text-anchor="middle" fill="#7c3aed">',
+                eventData.eventName,
+                '</text>',
+                '<text x="200" y="140" font-family="Arial" font-size="18" text-anchor="middle" fill="#4b5563">',
+                unicode"📅 ",
+                eventData.eventDate,
+                '</text>',
+                '<text x="200" y="180" font-family="Arial" font-size="16" text-anchor="middle" fill="#6b7280">',
+                unicode"📍 ",
+                eventData.eventLocation,
+                '</text>',
+                '<rect x="50" y="220" width="300" height="2" fill="#e5e7eb"/>',
+                '<text x="200" y="280" font-family="Arial" font-size="48" font-weight="bold" text-anchor="middle" fill="#7c3aed">',
+                '#',
+                ticket.ticketNumber.toString(),
+                '</text>',
+                '<text x="200" y="320" font-family="Arial" font-size="14" text-anchor="middle" fill="#9ca3af">',
+                'TICKET NUMBER',
+                '</text>',
+                '<rect x="50" y="360" width="300" height="2" fill="#e5e7eb"/>',
+                '<text x="200" y="420" font-family="Arial" font-size="12" text-anchor="middle" fill="#6b7280">',
+                'Token ID: #',
+                tokenId.toString(),
+                '</text>',
+                '<text x="200" y="450" font-family="Arial" font-size="16" font-weight="bold" text-anchor="middle" fill="',
+                ticket.isUsed ? '#ef4444' : '#10b981',
+                '">',
+                ticket.isUsed ? unicode'✓ USED' : unicode'✓ ACTIVE',
+                '</text>',
+                '<rect x="50" y="480" width="300" height="80" fill="#f3f4f6" rx="10"/>',
+                '<text x="200" y="510" font-family="Arial" font-size="10" text-anchor="middle" fill="#6b7280">',
+                'POWERED BY ELLIPTICHECK',
+                '</text>',
+                '<text x="200" y="535" font-family="Arial" font-size="10" text-anchor="middle" fill="#9ca3af">',
+                'Blockchain Verified Ticket',
+                '</text>',
+                '</svg>'
             )
         );
     }
@@ -212,7 +297,7 @@ contract TicketNFT is ERC721, Ownable {
         return _tokenIdCounter - 1;
     }
 
-    // ✅ BONUS: Get full ticket info for frontend display
+    // Get full ticket info for frontend display
     function getTicketInfo(uint256 tokenId) 
         external 
         view 

@@ -26,15 +26,55 @@ contract DeployScript is Script {
 
         // 3. Setup event example (optional)
         console.log("\n=== Creating Sample Event ===");
-        uint256 eventId = ticketNFT.createEvent(
-            "Konser Musik Rock 2025",
-            "2025-12-31",
-            "Jakarta Convention Center",
-            0.1 ether, // 0.1 ETH per ticket
-            100 // 100 tickets available
+        // Event 1: Education
+        uint256 id1 = ticketNFT.createEvent(
+            "Motion Design Workshop 2025",
+            "2025-11-20",
+            "Creative Hall, Jaksel",
+            0.03 ether, 
+            30 
         );
-        console.log("Sample event created with ID:", eventId);
+        console.log("Created Event 1: Motion Design Workshop (ID: %s)", id1);
 
+        // Event 2: Sports
+        uint256 id2 = ticketNFT.createEvent(
+            "Indonesia Open: Finals",
+            "2026-06-12",
+            "Istora Senayan",
+            0.12 ether, 
+            5000 
+        );
+        console.log("Created Event 2: Indonesia Open (ID: %s)", id2);
+
+        // Event 3: Food
+        uint256 id3 = ticketNFT.createEvent(
+            "Festival Kuliner Nusantara",
+            "2026-01-15",
+            "Lapangan Puputan, Bali",
+            0.015 ether, 
+            200 
+        );
+        console.log("Created Event 3: Festival Kuliner (ID: %s)", id3);
+
+        // Event 4: Entertainment
+        uint256 id4 = ticketNFT.createEvent(
+            "Stand Up Comedy Special",
+            "2026-02-28",
+            "Teater Besar, TIM",
+            0.04 ether, 
+            300 
+        );
+        console.log("Created Event 4: Stand Up Comedy (ID: %s)", id4);
+
+        // Event 5: Health
+        uint256 id5 = ticketNFT.createEvent(
+            "Yoga & Meditation Retreat",
+            "2026-03-10",
+            "Ubud Sanctuary",
+            0.08 ether, 
+            20 
+        );
+        console.log("Created Event 5: Yoga Retreat (ID: %s)", id5);
         vm.stopBroadcast();
 
         // Log summary

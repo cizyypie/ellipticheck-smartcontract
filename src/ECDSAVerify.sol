@@ -8,14 +8,19 @@ library ECDSAVerify {
     // KONSTANTA KURVA ELIPTIK SECP256K1
     uint256 constant a = 0;
     uint256 constant b = 7;
-    uint256 constant p = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F;
-    uint256 constant n = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141;
-    
+    uint256 constant p =
+        0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F;
+    uint256 constant n =
+        0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141;
+
     // ✅ ADD: Half curve order for malleability protection
-    uint256 constant HALF_N = 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0;
-    
-    uint256 constant Gx = 55066263022277343669578718895168534326250603453777594175500187360389116729240;
-    uint256 constant Gy = 32670510020758816978083085130507043184471273380659243275938904335757337482424;
+    uint256 constant HALF_N =
+        0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0;
+
+    uint256 constant Gx =
+        55066263022277343669578718895168534326250603453777594175500187360389116729240;
+    uint256 constant Gy =
+        32670510020758816978083085130507043184471273380659243275938904335757337482424;
 
     struct ECPoint {
         uint256 x;
@@ -35,11 +40,11 @@ library ECDSAVerify {
         ECPoint memory Q
     ) internal pure returns (bool valid) {
         require(r > 0 && r < n, "invalid r");
-        
+
         // ✅ FIX: Add malleability protection
         // Restrict s to lower half of curve to prevent signature malleability
         require(s > 0 && s <= HALF_N, "invalid s - malleable signature");
-        
+
         require(isOnCurve(Q), "public key not on curve");
 
         // 1. Hitung s⁻¹ (mod n)
@@ -62,7 +67,9 @@ library ECDSAVerify {
     /// @dev Address = last 20 bytes of keccak256(x || y)
     /// @param Q Public key dalam bentuk ECPoint
     /// @return addr Address Ethereum yang sesuai
-    function publicKeyToAddress(ECPoint memory Q) internal pure returns (address addr) {
+    function publicKeyToAddress(
+        ECPoint memory Q
+    ) internal pure returns (address addr) {
         bytes32 hash = keccak256(abi.encodePacked(Q.x, Q.y));
         addr = address(uint160(uint256(hash)));
     }
@@ -71,7 +78,7 @@ library ECDSAVerify {
     function isOnCurve(ECPoint memory Q) internal pure returns (bool) {
         if (Q.x == 0 && Q.y == 0) return false;
         if (Q.x >= p || Q.y >= p) return false;
-        
+
         uint256 lhs = mulmod(Q.y, Q.y, p);
         uint256 rhs = addmod(mulmod(mulmod(Q.x, Q.x, p), Q.x, p), b, p);
         return lhs == rhs;
@@ -105,8 +112,16 @@ library ECDSAVerify {
             lambda = mulmod(num, den, p);
         }
 
-        uint256 xr = addmod(mulmod(lambda, lambda, p), p - addmod(P.x, Q.x, p), p);
-        uint256 yr = addmod(mulmod(lambda, addmod(P.x, p - xr, p), p), p - P.y, p);
+        uint256 xr = addmod(
+            mulmod(lambda, lambda, p),
+            p - addmod(P.x, Q.x, p),
+            p
+        );
+        uint256 yr = addmod(
+            mulmod(lambda, addmod(P.x, p - xr, p), p),
+            p - P.y,
+            p
+        );
 
         R = ECPoint(xr, yr);
     }
