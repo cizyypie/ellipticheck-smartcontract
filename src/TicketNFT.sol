@@ -191,7 +191,6 @@ contract TicketNFT is ERC721, Ownable {
         );
     }
 
-    // Generate beautiful SVG ticket image
     function _generateSVG(
         uint256 tokenId,
         Ticket memory ticket,
@@ -202,8 +201,8 @@ contract TicketNFT is ERC721, Ownable {
                 '<svg width="400" height="600" xmlns="http://www.w3.org/2000/svg">',
                 '<defs>',
                 '<linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">',
-                '<stop offset="0%" style="stop-color:rgb(147,51,234);stop-opacity:1" />',
-                '<stop offset="100%" style="stop-color:rgb(79,70,229);stop-opacity:1" />',
+                '<stop offset="0%" style="stop-color:rgba(27, 96, 216, 1);stop-opacity:1" />',
+                '<stop offset="100%" style="stop-color:rgba(221, 217, 6, 1);stop-opacity:1" />',
                 '</linearGradient>',
                 '</defs>',
                 '<rect width="400" height="600" fill="url(#grad)" rx="20"/>',
