@@ -24,6 +24,8 @@ contract DeployScript is Script {
         TicketVerifier verifier = new TicketVerifier(address(ticketNFT));
         console.log("TicketVerifier deployed at:", address(verifier));
 
+        ticketNFT.setVerifier(address(verifier));
+
         // 3. Setup event example (optional)
         console.log("\n=== Creating Sample Event ===");
         // Event 1: Education
