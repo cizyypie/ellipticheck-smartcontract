@@ -31,7 +31,7 @@ contract DeployScript is Script {
         // Event 1: Education
         uint256 id1 = ticketNFT.createEvent(
             "Motion Design Workshop 2025",
-            "2025-11-20",
+            "2026-04-20",
             "Creative Hall, Jaksel",
             0.03 ether, 
             30 
@@ -51,7 +51,7 @@ contract DeployScript is Script {
         // Event 3: Food
         uint256 id3 = ticketNFT.createEvent(
             "Festival Kuliner Nusantara",
-            "2026-01-15",
+            "2026-02-30",
             "Lapangan Puputan, Bali",
             0.015 ether, 
             200 

@@ -13,7 +13,7 @@ library ECDSAVerify {
     uint256 constant n =
         0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141;
 
-    // ✅ ADD: Half curve order for malleability protection
+    // ADD: Half curve order for malleability protection
     uint256 constant HALF_N =
         0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0;
 
@@ -41,7 +41,6 @@ library ECDSAVerify {
     ) internal pure returns (bool valid) {
         require(r > 0 && r < n, "invalid r");
 
-        // ✅ FIX: Add malleability protection
         // Restrict s to lower half of curve to prevent signature malleability
         require(s > 0 && s <= HALF_N, "invalid s - malleable signature");
 

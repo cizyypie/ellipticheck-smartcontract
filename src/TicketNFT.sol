@@ -64,9 +64,30 @@ contract TicketNFT is ERC721, Ownable {
     error TicketAlreadyUsed();
     error InvalidEventId();
     error Unauthorized();
+    error CannotTransferUsedTicket();
 
     // CONSTRUCTOR
     constructor() ERC721("ElliptiCheck", "ELC") Ownable(msg.sender) {}
+
+    // OVERRIDE _update TO PREVENT TRANSFER OF USED TICKETS
+    function _update(address to, uint256 tokenId, address auth)
+        internal
+        override
+        returns (address)
+    {
+        address from = _ownerOf(tokenId);
+        
+        // Allow minting (from == address(0))
+        // Allow burning (to == address(0))
+        // But block transfers of used tickets
+        if (from != address(0) && to != address(0)) {
+            if (tickets[tokenId].isUsed) {
+                revert CannotTransferUsedTicket();
+            }
+        }
+        
+        return super._update(to, tokenId, auth);
+    }
 
     // SET VERIFIER
     function setVerifier(address _verifier) external onlyOwner {
@@ -132,64 +153,30 @@ contract TicketNFT is ERC721, Ownable {
         emit TicketUsed(tokenId, ownerOf(tokenId), block.timestamp);
     }
 
-    // SIMPLIFIED TOKEN URI - MINIMAL METADATA TO AVOID STACK ISSUES
-    function tokenURI(uint256 tokenId)
-        public
-        view
-        override
-        returns (string memory)
-    {
-        _requireOwned(tokenId);
-        
-        Ticket memory ticket = tickets[tokenId];
-        TicketMetadata memory eventData = events[ticket.eventId];
+  function tokenURI(uint256 tokenId) public view override returns (string memory) {
+    _requireOwned(tokenId);
+    Ticket memory ticket = tickets[tokenId];
+    TicketMetadata memory eventData = events[ticket.eventId];
 
-        // Generate SVG image
-        string memory svg = _generateSVG(tokenId, ticket, eventData);
-        
-        // Encode SVG to base64
-        string memory svgBase64 = Base64.encode(bytes(svg));
+    string memory svg = _generateSVG(tokenId, ticket, eventData);
+    string memory svgBase64 = Base64.encode(bytes(svg));
 
-        // Build complete JSON metadata
-        string memory json = string(
-            abi.encodePacked(
-                '{"name":"',
-                eventData.eventName,
-                ' - Ticket #',
-                ticket.ticketNumber.toString(),
-                '","description":"Event ticket for ',
-                eventData.eventName,
-                ' on ',
-                eventData.eventDate,
-                '","image":"data:image/svg+xml;base64,',
-                svgBase64,
-                '","attributes":[',
-                '{"trait_type":"Event","value":"',
-                eventData.eventName,
-                '"},',
-                '{"trait_type":"Date","value":"',
-                eventData.eventDate,
-                '"},',
-                '{"trait_type":"Location","value":"',
-                eventData.eventLocation,
-                '"},',
-                '{"trait_type":"Ticket Number","value":"',
-                ticket.ticketNumber.toString(),
-                '"},',
-                '{"trait_type":"Status","value":"',
-                ticket.isUsed ? 'Used' : 'Active',
-                '"}',
-                ']}'
-            )
-        );
+    string memory json = string(
+        abi.encodePacked(
+            '{"name":"', eventData.eventName, ' - Ticket ID #', tokenId.toString(), '",', // Pakai tokenId
+            '"description":"Official event ticket for ', eventData.eventName, '",',
+            '"image":"data:image/svg+xml;base64,', svgBase64, '",',
+            '"attributes":[',
+                '{"trait_type":"Event","value":"', eventData.eventName, '"},',
+                '{"trait_type":"Date","value":"', eventData.eventDate, '"},',
+                '{"trait_type":"Ticket ID","value":"', tokenId.toString(), '"},', // Masking: Tampilkan tokenId
+                '{"trait_type":"Status","value":"', ticket.isUsed ? 'Used' : 'Active', '"}',
+            ']}'
+        )
+    );
 
-        return string(
-            abi.encodePacked(
-                "data:application/json;base64,",
-                Base64.encode(bytes(json))
-            )
-        );
-    }
+    return string(abi.encodePacked("data:application/json;base64,", Base64.encode(bytes(json))));
+}
 
     function _generateSVG(
         uint256 tokenId,
@@ -221,17 +208,17 @@ contract TicketNFT is ERC721, Ownable {
                 '<rect x="50" y="220" width="300" height="2" fill="#e5e7eb"/>',
                 '<text x="200" y="280" font-family="Arial" font-size="48" font-weight="bold" text-anchor="middle" fill="#7c3aed">',
                 '#',
-                ticket.ticketNumber.toString(),
-                '</text>',
+                 tokenId.toString(),
+                 '</text>',
                 '<text x="200" y="320" font-family="Arial" font-size="14" text-anchor="middle" fill="#9ca3af">',
-                'TICKET NUMBER',
+                'TICKET ID',
                 '</text>',
-                '<rect x="50" y="360" width="300" height="2" fill="#e5e7eb"/>',
-                '<text x="200" y="420" font-family="Arial" font-size="12" text-anchor="middle" fill="#6b7280">',
-                'Token ID: #',
-                tokenId.toString(),
-                '</text>',
-                '<text x="200" y="450" font-family="Arial" font-size="16" font-weight="bold" text-anchor="middle" fill="',
+                // '<rect x="50" y="360" width="300" height="2" fill="#e5e7eb"/>',
+                // '<text x="200" y="420" font-family="Arial" font-size="12" text-anchor="middle" fill="#6b7280">',
+                // 'Token ID: #',
+               
+                // '</text>',
+                // '<text x="200" y="450" font-family="Arial" font-size="16" font-weight="bold" text-anchor="middle" fill="',
                 ticket.isUsed ? '#ef4444' : '#10b981',
                 '">',
                 ticket.isUsed ? unicode'✓ USED' : unicode'✓ ACTIVE',
@@ -304,7 +291,7 @@ contract TicketNFT is ERC721, Ownable {
             string memory eventName,
             string memory eventDate,
             string memory eventLocation,
-            uint256 ticketNumber,
+            uint256 ticketId,
             bool isUsed
         ) 
     {
@@ -316,7 +303,7 @@ contract TicketNFT is ERC721, Ownable {
             eventData.eventName,
             eventData.eventDate,
             eventData.eventLocation,
-            ticket.ticketNumber,
+            tokenId,
             ticket.isUsed
         );
     }

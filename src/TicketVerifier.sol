@@ -21,17 +21,7 @@ contract TicketVerifier {
         uint256 Qy;
     }
 
-    TicketNFT public ticketNFT;
-
-    bytes32 public DOMAIN_SEPARATOR;
-    bytes32 public constant TYPEHASH =
-        keccak256(
-            "TicketAccess(uint256 ticketId,address owner,uint256 deadline,bytes32 metadataHash)"
-        );
-
-    mapping(bytes32 => bool) public usedDigest;
-
-    // ERRORS
+ // ERRORS
     error Expired();
     error Replayed();
     error InvalidSignature();
@@ -41,6 +31,16 @@ contract TicketVerifier {
     event TicketVerified(address indexed owner, uint256 ticketId, bytes32 digest);
     event TicketRejected(uint256 ticketId, string reason);
 
+    TicketNFT public ticketNFT;
+
+    mapping(bytes32 => bool) public usedDigest;
+
+    bytes32 public DOMAIN_SEPARATOR;
+    bytes32 public constant TYPEHASH =
+        keccak256(
+            "TicketAccess(uint256 ticketId,address owner,uint256 deadline,bytes32 metadataHash)"
+        );
+        
     constructor(address _ticketNFT) {
         ticketNFT = TicketNFT(_ticketNFT);
 
@@ -62,9 +62,7 @@ contract TicketVerifier {
         );
     }
 
-    // ───────────────────────────
     // MAIN VERIFY FUNCTION
-    // ───────────────────────────
     function verifyAccess(
         VerificationRequest calldata req,
         SignatureData calldata sig
@@ -90,9 +88,7 @@ contract TicketVerifier {
         return true;
     }
 
-    // ───────────────────────────
     // INTERNAL HELPERS
-    // ───────────────────────────
     function _buildDigest(VerificationRequest calldata req)
         internal
         view
