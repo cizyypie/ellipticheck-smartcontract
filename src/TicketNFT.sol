@@ -36,6 +36,9 @@ contract TicketNFT is ERC721, Ownable {
 
     address public verifier;
 
+    //  Base URI for external images
+    string public baseImageURI = "https://api.dicebear.com/7.x/shapes/svg?seed=";
+    
     // EVENTS
     event EventCreated(
         uint256 indexed eventId,
@@ -94,6 +97,10 @@ contract TicketNFT is ERC721, Ownable {
         verifier = _verifier;
     }
 
+    // NEW: Set base image URI (for updating image source)
+    function setBaseImageURI(string memory _baseImageURI) external onlyOwner {
+        baseImageURI = _baseImageURI;
+    }
 
     // EVENT CREATION
     function createEvent(
@@ -153,86 +160,40 @@ contract TicketNFT is ERC721, Ownable {
         emit TicketUsed(tokenId, ownerOf(tokenId), block.timestamp);
     }
 
-  function tokenURI(uint256 tokenId) public view override returns (string memory) {
-    _requireOwned(tokenId);
-    Ticket memory ticket = tickets[tokenId];
-    TicketMetadata memory eventData = events[ticket.eventId];
+    //tokenURI with EXTERNAL IMAGE URL
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
+        _requireOwned(tokenId);
+        Ticket memory ticket = tickets[tokenId];
+        TicketMetadata memory eventData = events[ticket.eventId];
 
-    string memory svg = _generateSVG(tokenId, ticket, eventData);
-    string memory svgBase64 = Base64.encode(bytes(svg));
-
-    string memory json = string(
-        abi.encodePacked(
-            '{"name":"', eventData.eventName, ' - Ticket ID #', tokenId.toString(), '",', // Pakai tokenId
-            '"description":"Official event ticket for ', eventData.eventName, '",',
-            '"image":"data:image/svg+xml;base64,', svgBase64, '",',
-            '"attributes":[',
-                '{"trait_type":"Event","value":"', eventData.eventName, '"},',
-                '{"trait_type":"Date","value":"', eventData.eventDate, '"},',
-                '{"trait_type":"Ticket ID","value":"', tokenId.toString(), '"},', // Masking: Tampilkan tokenId
-                '{"trait_type":"Status","value":"', ticket.isUsed ? 'Used' : 'Active', '"}',
-            ']}'
-        )
-    );
-
-    return string(abi.encodePacked("data:application/json;base64,", Base64.encode(bytes(json))));
-}
-
-    function _generateSVG(
-        uint256 tokenId,
-        Ticket memory ticket,
-        TicketMetadata memory eventData
-    ) internal pure returns (string memory) {
-        return string(
+        // Generate unique image URL based on tokenId
+        // This uses Dicebear API to generate unique avatars/shapes
+        string memory imageUrl = string(
             abi.encodePacked(
-                '<svg width="400" height="600" xmlns="http://www.w3.org/2000/svg">',
-                '<defs>',
-                '<linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">',
-                '<stop offset="0%" style="stop-color:rgba(27, 96, 216, 1);stop-opacity:1" />',
-                '<stop offset="100%" style="stop-color:rgba(221, 217, 6, 1);stop-opacity:1" />',
-                '</linearGradient>',
-                '</defs>',
-                '<rect width="400" height="600" fill="url(#grad)" rx="20"/>',
-                '<rect x="20" y="20" width="360" height="560" fill="white" rx="15" opacity="0.95"/>',
-                '<text x="200" y="80" font-family="Arial" font-size="28" font-weight="bold" text-anchor="middle" fill="#7c3aed">',
-                eventData.eventName,
-                '</text>',
-                '<text x="200" y="140" font-family="Arial" font-size="18" text-anchor="middle" fill="#4b5563">',
-                unicode"📅 ",
-                eventData.eventDate,
-                '</text>',
-                '<text x="200" y="180" font-family="Arial" font-size="16" text-anchor="middle" fill="#6b7280">',
-                unicode"📍 ",
-                eventData.eventLocation,
-                '</text>',
-                '<rect x="50" y="220" width="300" height="2" fill="#e5e7eb"/>',
-                '<text x="200" y="280" font-family="Arial" font-size="48" font-weight="bold" text-anchor="middle" fill="#7c3aed">',
-                '#',
-                 tokenId.toString(),
-                 '</text>',
-                '<text x="200" y="320" font-family="Arial" font-size="14" text-anchor="middle" fill="#9ca3af">',
-                'TICKET ID',
-                '</text>',
-                // '<rect x="50" y="360" width="300" height="2" fill="#e5e7eb"/>',
-                // '<text x="200" y="420" font-family="Arial" font-size="12" text-anchor="middle" fill="#6b7280">',
-                // 'Token ID: #',
-               
-                // '</text>',
-                // '<text x="200" y="450" font-family="Arial" font-size="16" font-weight="bold" text-anchor="middle" fill="',
-                ticket.isUsed ? '#ef4444' : '#10b981',
-                '">',
-                ticket.isUsed ? unicode'✓ USED' : unicode'✓ ACTIVE',
-                '</text>',
-                '<rect x="50" y="480" width="300" height="80" fill="#f3f4f6" rx="10"/>',
-                '<text x="200" y="510" font-family="Arial" font-size="10" text-anchor="middle" fill="#6b7280">',
-                'POWERED BY ELLIPTICHECK',
-                '</text>',
-                '<text x="200" y="535" font-family="Arial" font-size="10" text-anchor="middle" fill="#9ca3af">',
-                'Blockchain Verified Ticket',
-                '</text>',
-                '</svg>'
+                baseImageURI,
+                "ticket",
+                tokenId.toString()
             )
         );
+
+        string memory json = string(
+            abi.encodePacked(
+                '{"name":"', eventData.eventName, ' - Ticket #', tokenId.toString(), '",',
+                '"description":"Official event ticket for ', eventData.eventName, '",',
+                '"image":"', imageUrl, '",', 
+                '"external_url":"https://ellipticheck.com/ticket/', tokenId.toString(), '",',
+                '"attributes":[',
+                    '{"trait_type":"Event","value":"', eventData.eventName, '"},',
+                    '{"trait_type":"Date","value":"', eventData.eventDate, '"},',
+                    '{"trait_type":"Location","value":"', eventData.eventLocation, '"},',
+                    '{"trait_type":"Ticket ID","value":"', tokenId.toString(), '"},',
+                    '{"trait_type":"Ticket Number","value":"', ticket.ticketNumber.toString(), '"},',
+                    '{"trait_type":"Status","value":"', ticket.isUsed ? 'Used' : 'Active', '"}',
+                ']}'
+            )
+        );
+
+        return string(abi.encodePacked("data:application/json;base64,", Base64.encode(bytes(json))));
     }
 
     // MISC
@@ -281,6 +242,11 @@ contract TicketNFT is ERC721, Ownable {
 
     function tokenCounter() external view returns (uint256) {
         return _tokenIdCounter - 1;
+    }
+
+    function isTicketUsed(uint256 tokenId) external view returns (bool) {
+        _requireOwned(tokenId);
+        return tickets[tokenId].isUsed;
     }
 
     // Get full ticket info for frontend display
