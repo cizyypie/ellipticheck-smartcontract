@@ -1,10 +1,13 @@
 
+out/TicketNFT.sol/TicketNFT.json
+out/TicketVerifier.sol/TicketVerifier.json
+broadcast/Deploy.s.sol/31337/run-latest.json
+cache/solidity-files-cache.json
 out/
 cache/
 broadcast/
 lib/
 gas-snapshot.txt
-
 
 # Environment & Credentials
 
@@ -31,3 +34,5 @@ Thumbs.db
 *.json
 *.bin
 *.abi
+
+

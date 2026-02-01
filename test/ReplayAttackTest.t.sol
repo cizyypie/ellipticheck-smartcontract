@@ -41,7 +41,7 @@ contract ReplayAttackTest is Test {
         // Create two events
         eventId1 = ticketNFT.createEvent(
             "Concert A",
-            "2025-12-31",
+            "2026-06-05",
             "Stadium A",
             0.1 ether,
             100
@@ -49,7 +49,7 @@ contract ReplayAttackTest is Test {
 
         eventId2 = ticketNFT.createEvent(
             "Concert B",
-            "2025-12-31",
+            "2026-10-12",
             "Stadium B",
             0.1 ether,
             100
@@ -277,7 +277,7 @@ contract ReplayAttackTest is Test {
 
         // Try to reuse SAME signature for different ticket (even if digest is different)
         // This should fail because ticketId is different, thus digest is different
-        bytes32 digest2 = _buildDigest(ticketId2, buyer, deadline, metadataHash);
+        // bytes32 digest2 = _buildDigest(ticketId2, buyer, deadline, metadataHash);
         
         // The digest will be different, so signature will be invalid
         TicketVerifier.VerificationRequest memory req2 = TicketVerifier.VerificationRequest({

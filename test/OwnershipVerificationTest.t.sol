@@ -8,7 +8,7 @@ import "../src/ECDSAVerify.sol";
 
 /**
  * @title OwnershipVerificationTest
- * @notice Penetration testing untuk memastikan sistem tidak bisa di-bypass dengan:
+ * @notice  testing untuk memastikan sistem tidak bisa di-bypass dengan:
  *         - Forged signatures
  *         - Wrong owner's signature
  *         - Invalid public keys
@@ -41,7 +41,7 @@ contract OwnershipVerificationTest is Test {
         // Create event
         eventId = ticketNFT.createEvent(
             "Test Concert",
-            "2025-12-31",
+            "2026-06-09",
             "Stadium",
             0.1 ether,
             100
