@@ -302,7 +302,7 @@ Dengan menggunakan:
 script/Deploy.s.sol
 ```
 
-kamu tidak perlu lagi menjalankan:
+tidak perlu lagi menjalankan:
 
 * forge create
 * cast send setVerifier
