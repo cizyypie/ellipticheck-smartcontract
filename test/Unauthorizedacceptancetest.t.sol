@@ -52,7 +52,7 @@ contract UnauthorizedAcceptanceTest is Test {
         verifier = new TicketVerifier(address(ticketNFT));
         ticketNFT.setVerifier(address(verifier));
 
-        eventId = ticketNFT.createEvent("Concert", "2025-12-31", "Stadium", 0.1 ether, 100);
+        eventId = ticketNFT.createEvent("Concert", "2026-12-31", "Stadium", 0.1 ether, 100);
         vm.stopPrank();
 
         // Mint tickets
