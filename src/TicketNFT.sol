@@ -126,29 +126,31 @@ contract TicketNFT is ERC721, Ownable {
 
     // MINTING
     function mintTicket(uint256 eventId, address to)
-        external
-        payable
-        returns (uint256 tokenId)
-    {
-        TicketMetadata memory e = events[eventId];
-        if (!e.isActive) revert EventNotActive();
-        if (eventTicketCount[eventId] >= e.totalSupply) revert SoldOut();
-        if (msg.value < e.price) revert InsufficientPayment();
+    external
+    payable
+    returns (uint256 tokenId)
+{
+    TicketMetadata memory e = events[eventId];
+    if (!e.isActive) revert EventNotActive();
+    if (eventTicketCount[eventId] >= e.totalSupply) revert SoldOut();
+    if (msg.value < e.price) revert InsufficientPayment();
 
-        tokenId = _tokenIdCounter++;
-        uint256 ticketNumber = ++eventTicketCount[eventId];
+    tokenId = _tokenIdCounter++;
+    uint256 ticketNumber = ++eventTicketCount[eventId];
 
-        tickets[tokenId] = Ticket(
-            eventId,
-            ticketNumber,
-            block.timestamp,
-            false
-        );
+    tickets[tokenId] = Ticket(
+        eventId,
+        ticketNumber,
+        block.timestamp,
+        false
+    );
 
-        _safeMint(to, tokenId);
+    _safeMint(to, tokenId);
+    (bool success, ) = payable(owner()).call{value: msg.value}("");
+    require(success, "Transfer failed");
 
-        emit TicketMinted(tokenId, eventId, to, ticketNumber);
-    }
+    emit TicketMinted(tokenId, eventId, to, ticketNumber);
+}
 
     // MARK TICKET USED
     function markTicketAsUsed(uint256 tokenId) external {
