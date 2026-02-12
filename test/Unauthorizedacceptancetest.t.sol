@@ -124,7 +124,7 @@ contract UnauthorizedAcceptanceTest is Test {
 
     /// @notice Positif: verifyAccess diterima ketika req.owner == ownerOf(ticketId)
     function test_verifyAccess_AcceptedWhenOwnerMatches() public {
-        uint256 deadline = block.timestamp + 1 hours;
+        uint256 deadline = block.timestamp + 58 seconds;
         bytes32 metaHash = keccak256("metadata");
         bytes32 digest = _buildDigest(ticketA, buyerA, deadline, metaHash);
         (uint256 r, uint256 s, uint256 Qx, uint256 Qy) = _sign(BUYER_A_KEY, digest);
@@ -146,7 +146,7 @@ contract UnauthorizedAcceptanceTest is Test {
 
     /// @notice Negatif: verifyAccess revert ketika req.owner bukan ownerOf(ticketId)
     function test_verifyAccess_RevertNotOwnerWhenOwnerMismatch() public {
-        uint256 deadline = block.timestamp + 1 hours;
+        uint256 deadline = block.timestamp + 58 seconds;
         bytes32 metaHash = keccak256("metadata");
 
         // Sign dengan buyerB tapi claim ticketA (milik buyerA)
@@ -175,7 +175,7 @@ contract UnauthorizedAcceptanceTest is Test {
 
     /// @notice Positif: verifyAccess diterima ketika public key sesuai owner
     function test_verifySignature_AcceptedWhenPublicKeyMatchesOwner() public {
-        uint256 deadline = block.timestamp + 1 hours;
+        uint256 deadline = block.timestamp + 58 seconds;
         bytes32 metaHash = keccak256("metadata");
         bytes32 digest = _buildDigest(ticketA, buyerA, deadline, metaHash);
 
@@ -199,7 +199,7 @@ contract UnauthorizedAcceptanceTest is Test {
 
     /// @notice Negatif: verifyAccess revert ketika public key dari private key yang berbeda
     function test_verifySignature_RevertInvalidPublicKeyWhenKeyMismatch() public {
-        uint256 deadline = block.timestamp + 1 hours;
+        uint256 deadline = block.timestamp + 58 seconds;
         bytes32 metaHash = keccak256("metadata");
         bytes32 digest = _buildDigest(ticketA, buyerA, deadline, metaHash);
 
@@ -232,7 +232,7 @@ contract UnauthorizedAcceptanceTest is Test {
 
     /// @notice Negatif: verifyAccess revert ketika r == 0
     function test_ecdsaverify_RevertInvalidRWhenZero() public {
-        uint256 deadline = block.timestamp + 1 hours;
+        uint256 deadline = block.timestamp + 58 seconds;
         bytes32 metaHash = keccak256("metadata");
 
         (uint256 Qx, uint256 Qy) = _getPublicKey(BUYER_A_KEY);
@@ -256,7 +256,7 @@ contract UnauthorizedAcceptanceTest is Test {
 
     /// @notice Negatif: verifyAccess revert ketika r >= n (curve order)
     function test_ecdsaverify_RevertInvalidRWhenGeN() public {
-        uint256 deadline = block.timestamp + 1 hours;
+        uint256 deadline = block.timestamp + 58 seconds;
         bytes32 metaHash = keccak256("metadata");
         uint256 n = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141;
 
@@ -286,7 +286,7 @@ contract UnauthorizedAcceptanceTest is Test {
 
     /// @notice Negatif: verifyAccess revert ketika s == 0
     function test_ecdsaverify_RevertInvalidSWhenZero() public {
-        uint256 deadline = block.timestamp + 1 hours;
+        uint256 deadline = block.timestamp + 58 seconds;
         bytes32 metaHash = keccak256("metadata");
 
         (uint256 Qx, uint256 Qy) = _getPublicKey(BUYER_A_KEY);
@@ -310,7 +310,7 @@ contract UnauthorizedAcceptanceTest is Test {
 
     /// @notice Negatif: verifyAccess revert ketika s > HALF_N (signature malleability)
     function test_ecdsaverify_RevertInvalidSWhenAboveHalfN() public {
-        uint256 deadline = block.timestamp + 1 hours;
+        uint256 deadline = block.timestamp + 58 seconds;
         bytes32 metaHash = keccak256("metadata");
         bytes32 digest = _buildDigest(ticketA, buyerA, deadline, metaHash);
 
@@ -345,7 +345,7 @@ contract UnauthorizedAcceptanceTest is Test {
 
     /// @notice Negatif: verifyAccess revert ketika Q bukan titik di curve secp256k1
     function test_ecdsaverify_RevertNotOnCurveWhenInvalidPoint() public {
-        uint256 deadline = block.timestamp + 1 hours;
+        uint256 deadline = block.timestamp + 58 seconds;
         bytes32 metaHash = keccak256("metadata");
 
         TicketVerifier.VerificationRequest memory req = TicketVerifier.VerificationRequest({
@@ -370,7 +370,7 @@ contract UnauthorizedAcceptanceTest is Test {
 
     /// @notice Negatif: verifyAccess revert ketika Q == (0, 0) (point at infinity)
     function test_ecdsaverify_RevertNotOnCurveWhenZeroPoint() public {
-        uint256 deadline = block.timestamp + 1 hours;
+        uint256 deadline = block.timestamp + 58 seconds;
         bytes32 metaHash = keccak256("metadata");
 
         TicketVerifier.VerificationRequest memory req = TicketVerifier.VerificationRequest({
