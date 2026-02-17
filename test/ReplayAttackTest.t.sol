@@ -134,7 +134,7 @@ contract ReplayAttackTest is Test {
 
     /// @notice Positif: verifyAccess diterima selama masih sebelum deadline
     function test_verifyAccess_AcceptedBeforeDeadline() public {
-        uint256 deadline = block.timestamp + 58 seconds;
+        uint256 deadline = block.timestamp + 40 seconds;
         (TicketVerifier.VerificationRequest memory req, TicketVerifier.SignatureData memory sig) = _createValidVerification(ticketId, buyer, BUYER_PRIVATE_KEY, deadline);
 
         bool result = verifier.verifyAccess(req, sig);
@@ -143,7 +143,7 @@ contract ReplayAttackTest is Test {
 
     /// @notice Negatif: verifyAccess revert tepat saat timestamp == deadline + 1
     function test_verifyAccess_RevertExpiredAtDeadlinePlusOne() public {
-        uint256 deadline = block.timestamp + 58 seconds;
+        uint256 deadline = block.timestamp + 40 seconds;
         (TicketVerifier.VerificationRequest memory req, TicketVerifier.SignatureData memory sig) = _createValidVerification(ticketId, buyer, BUYER_PRIVATE_KEY, deadline);
 
         vm.warp(deadline + 1); // Mundur 1 detik setelah deadline
@@ -154,7 +154,7 @@ contract ReplayAttackTest is Test {
 
     /// @notice Negatif: verifyAccess revert jauh setelah deadline berlalu
     function test_verifyAccess_RevertExpiredLongAfterDeadline() public {
-        uint256 deadline = block.timestamp + 58 seconds;
+        uint256 deadline = block.timestamp + 40 seconds;
         (TicketVerifier.VerificationRequest memory req, TicketVerifier.SignatureData memory sig) = _createValidVerification(ticketId, buyer, BUYER_PRIVATE_KEY, deadline);
 
         vm.warp(deadline + 1 days); // Mundur 1 hari setelah deadline
@@ -170,7 +170,7 @@ contract ReplayAttackTest is Test {
 
     /// @notice Positif: usedDigest false sebelum pertama kali verifikasi
     function test_verifyAccess_DigestUnusedBeforeFirstVerify() public {
-        uint256 deadline = block.timestamp + 58 seconds;
+        uint256 deadline = block.timestamp + 40 seconds;
         bytes32 metaHash = keccak256("metadata");
         bytes32 digest = _buildDigest(ticketId, buyer, deadline, metaHash);
 
@@ -180,7 +180,7 @@ contract ReplayAttackTest is Test {
 
     /// @notice Positif: usedDigest berubah true setelah verifikasi berhasil
     function test_verifyAccess_DigestMarkedUsedAfterVerify() public {
-        uint256 deadline = block.timestamp + 58 seconds;
+        uint256 deadline = block.timestamp + 40 seconds;
         bytes32 metaHash = keccak256("metadata");
         bytes32 digest = _buildDigest(ticketId, buyer, deadline, metaHash);
 
@@ -193,7 +193,7 @@ contract ReplayAttackTest is Test {
 
     /// @notice Negatif: verifyAccess revert ketika digest yang sama dipakai kedua kali
     function test_verifyAccess_RevertReplayedOnSecondCall() public {
-        uint256 deadline = block.timestamp + 58 seconds;
+        uint256 deadline = block.timestamp + 40 seconds;
         (TicketVerifier.VerificationRequest memory req, TicketVerifier.SignatureData memory sig) = _createValidVerification(ticketId, buyer, BUYER_PRIVATE_KEY, deadline);
 
         // Pertama: berhasil
@@ -206,7 +206,7 @@ contract ReplayAttackTest is Test {
 
     /// @notice Negatif: digest berbeda ketika metadataHash berbeda (tidak bisa dimanipulasi)
     function test_verifyAccess_DifferentMetadataProducesDifferentDigest() public {
-        uint256 deadline = block.timestamp + 58 seconds;
+        uint256 deadline = block.timestamp + 40 seconds;
 
         bytes32 digest1 = _buildDigest(ticketId, buyer, deadline, keccak256("metadata_A"));
         bytes32 digest2 = _buildDigest(ticketId, buyer, deadline, keccak256("metadata_B"));
