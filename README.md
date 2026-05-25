@@ -861,7 +861,7 @@ MIT License
 🔗 Links
 
 Frontend repository
-[https://github.com/yourusername/elliptiCheck-frontend](https://github.com/cizyypie/elliptic-fe)
+[https://github.com/cizyypie/fe](https://github.com/cizyypie/elliptic-fe)
 
 Foundry book
 [https://book.getfoundry.sh/](https://book.getfoundry.sh/)
